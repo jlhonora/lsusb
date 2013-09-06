@@ -1,19 +1,7 @@
 #!/usr/bin/env bash
 # lsusb utility for Mac OS X
+# Author: JLH, Sep 2013
 
-print_device() {
-	name=`echo $1 | head -2 | tail -1 | sed -e 's/^ *//g' -e 's/ *:$//g'`
-	PID=`echo $1 | grep "Product ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
-	if [ -z "$PID" ]; then
-		return
-	fi
-	VID=`echo $1 | grep "Vendor ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
-	if [ -z "$VID" ]; then
-		return
-	fi
-	bus_num=`system_profiler SPUSBDataType | grep -B 100 "$PID" | grep "Bus Number" | tail -1 | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
-	echo "Bus $bus_num ID $PID:$VID $name"
-}
 system_profiler SPUSBDataType > sp_info.log
 devices=`grep -B 2 -A 1 "Product ID" sp_info.log | sed 's/^--/#/'`
 
