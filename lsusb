@@ -3,7 +3,7 @@
 # Author: JLH, Sep 2013
 
 system_profiler SPUSBDataType > sp_info.log
-devices=`grep -B 2 -A 1 "Product ID" sp_info.log | sed 's/^--/#/'`
+devices=`grep -B 2 -A 6 "Product ID" sp_info.log | sed 's/^--/#/'`
 
 OIFS=$IFS
 IFS="#"
@@ -21,7 +21,13 @@ do
 		continue
 	fi
 	bus_num=`grep -B 100 "$PID" sp_info.log | grep "Bus Number" | tail -1 | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
-	echo "Bus $bus_num ID $PID:$VID $name"
+	device_num=`echo $device | grep "Location ID" | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;' | awk -F'/' '{print $2}'`
+	serial_str=""
+	serial_number=`echo $device | grep "Serial Number" | sed 's/Serial Number: //; s/^ *//g; s/ *$//g'`
+	if [ -n "$serial_number" ]; then
+		serial_str=" Serial: $serial_number"
+	fi
+	echo "Bus $bus_num Device$device_num ID: $PID:$VID $name $serial_str"
 done
 
 IFS=$OIFS
