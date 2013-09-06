@@ -6,18 +6,27 @@
 # lsusb [-v]
 #
 # Options:
-#  -v  Print the original output of system_profiler SPUSBDataType
+#  -v  
+# 	 Print the original output of system_profiler SPUSBDataType
+#
+#  -d [vendor]:[product]
+#              Show only devices with the specified vendor and product ID.  Both ID's are given in hexadecimal.
+#
+# Disclaimer: some part of the usage info has been taken from the manual of lsusb(8), I take no credit for it.
 
 # Save the data from the system_profiler command
 system_profiler SPUSBDataType > sp_info.log
 
-while getopts "v" opt; do
+while getopts "vd:" opt; do
     case "$opt" in
     v)  
 		cat sp_info.log
 		rm sp_info.log
 		exit 0
         ;;
+	d)
+		vid_pid=$OPTARG
+		;;
     esac
 done
 
@@ -60,10 +69,31 @@ do
 	fi
 
 	# Get the VID, trim at the end
-	VID=`echo $device | grep "Vendor ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+	VID_all=`echo $device | grep "Vendor ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
 	# If there's no VID then we skip the entry
-	if [ -z "$VID" ]; then
+	if [ -z "$VID_all" ]; then
 		continue
+	fi
+	VID=`echo $VID_all | awk -F ' ' '{print $1}' | sed 's/^ *//; s/ *$//'`
+	# Get the manufacturer string
+	manufacturer=`echo $VID_all | cut -d ' ' -f 2- | sed 's/^ *//; s/ *$//'`
+
+	# Filter by VID/PID if given as input argument
+	if [ -n "$vid_pid" ]; then
+		arg_vid=`echo $vid_pid | awk -F':' '{print $1}'`
+		if [ -n "$arg_vid" ]; then
+			if [ $arg_vid != $VID ]; then 
+				continue
+			fi
+		fi
+		arg_pid=`echo $vid_pid | awk -F':' '{print $2}' | sed 's/^ *//; s/ *$//'`
+		if [ -n "$arg_pid" ]; then
+			# Remove manufacturer from PID
+			 #pid_stripped=`echo $PID | awk -F ' ' '{print $1}' | sed 's/ *$//'`
+			if [ $arg_pid != $PID ]; then
+				continue
+			fi
+		fi
 	fi
 
 	# Get the bus number. For that, grep the last entry that contains "Bus Number" and then trim at the end.
@@ -80,7 +110,7 @@ do
 	fi
 
 	# Print the formatted entry
-	echo "Bus $bus_num Device$device_num ID: $PID:$VID $name $serial_str"
+	echo "Bus $bus_num Device$device_num ID: $VID:$PID $manufacturer $name $serial_str"
 done
 
 # Restore the IFS
