@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lsusb utility for Mac OS X
+# lsusb (list USB devices) utility for Mac OS X
 # Author: JLH, Sep 2013
 # Usage:
 #
