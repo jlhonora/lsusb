@@ -15,7 +15,6 @@ Bus 24 Device 2 ID: 8507:05ac  (Apple Inc.) Built-in iSight  Serial: 8J97P2KF16V
 Bus 26 Device 2 ID: 8403:05ac  (Apple Inc.) Internal Memory Card Reader  Serial: 9833
 Bus 04 Device 4 ID: 0236:05ac  (Apple Inc.) Apple Internal Keyboard / Trackpad 
 Bus 04 Device 3 ID: 8242:05ac  (Apple Inc.) IR Receiver 
-Bus 06 Device 4 ID: f432:0451  (Texas Instruments) Texas Instruments MSP-FET430UIF  Serial: 0CFF41E50F8E3309
 Bus 06 Device 2 ID: 4500:0a5c  (Broadcom Corp.) BRCM2046 Hub 
 Bus 06 Device 3 ID: 8213:05ac  (Apple Inc.) Bluetooth USB Host Controller  Serial: 002608CCAC6F
 ```

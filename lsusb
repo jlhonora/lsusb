@@ -17,16 +17,20 @@
 # Save the data from the system_profiler command
 system_profiler SPUSBDataType > sp_info.log
 
+# Parse options (v and d for now)
 while getopts "vd:" opt; do
     case "$opt" in
+    # Verbose
     v)  
-		cat sp_info.log
-		rm sp_info.log
-		exit 0
+		# Just output
+        cat sp_info.log
+        rm sp_info.log
+        exit 0
         ;;
-	d)
-		vid_pid=$OPTARG
-		;;
+    # Filter by VID/PID
+    d)
+        vid_pid=$OPTARG
+        ;;
     esac
 done
 
