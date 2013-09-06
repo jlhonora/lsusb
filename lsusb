@@ -114,7 +114,7 @@ do
 	fi
 
 	# Print the formatted entry
-	echo "Bus $bus_num Device$device_num ID: $VID:$PID $manufacturer $name $serial_str"
+	echo "Bus $bus_num Device$device_num: ID $VID:$PID $manufacturer $name $serial_str"
 done
 
 # Restore the IFS
