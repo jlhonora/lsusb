@@ -5,6 +5,16 @@
 # Save the data from the system_profiler command
 system_profiler SPUSBDataType > sp_info.log
 
+while getopts "v" opt; do
+    case "$opt" in
+    v)  
+		cat sp_info.log
+		rm sp_info.log
+		exit 0
+        ;;
+    esac
+done
+
 # Get all sets of lines that contain the "Product ID" string.
 # Also include other relevant lines. Here's an entry sample:
 #
