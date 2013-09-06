@@ -1,9 +1,9 @@
 lsusb command for Mac OS X
 ==========================
 
-This is an utility to easily list USB devices in Mac OS X, just like the `lsusb` command in Linux. It leverages the data from the `system_profiler SPUSBDataType` built-in command available in Mac.
+This is an utility to easily list USB devices in Mac OS X, just like the `lsusb` command in Linux. It leverages the data from the `system_profiler SPUSBDataType` built-in command available in Mac. You can type `lsusb -v` to get the unmodified output of `system_profiler SPUSBDataType`.
 
-To install, clone the repository and copy to a location available in your PATH, for example `cp lsusb /usr/sbin`.
+To install, clone the repository and copy to a location available in your PATH, for example `sudo cp lsusb /usr/sbin`.
 
 Here's an output example:
 

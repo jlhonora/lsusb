@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # lsusb utility for Mac OS X
 # Author: JLH, Sep 2013
+# Usage:
+#
+# lsusb [-v]
+#
+# Options:
+#  -v  Print the original output of system_profiler SPUSBDataType
 
 # Save the data from the system_profiler command
 system_profiler SPUSBDataType > sp_info.log
