@@ -5,7 +5,7 @@ This is an utility to easily list USB devices in Mac OS X, just like the `lsusb`
 
 To install, clone the repository and copy to a location available in your PATH, for example `cp lsusb /usr/sbin`.
 
-Here's a an example output:
+Here's an output example:
 
 ```
 Bus 24 Device 3 ID: 0101:1a40  (TERMINUS TECHNOLOGY INC.) USB 2.0 Hub [MTT] 
