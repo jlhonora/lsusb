@@ -9,7 +9,7 @@
 #  -v  
 # 	 Print the original output of `system_profiler SPUSBDataType`
 #
-#  -d [vendor]:[product]
+#  -d [vendor][:product]
 #              Show only devices with the specified vendor and product ID.  Both ID's are given in hexadecimal.
 #
 # Disclaimer: some part of the usage info has been taken from the manual of lsusb(8), I take no credit for it.
@@ -22,7 +22,7 @@ while getopts "vd:" opt; do
     case "$opt" in
     # Verbose
     v)  
-		# Just output
+        # Just output
         cat sp_info.log
         rm sp_info.log
         exit 0
@@ -84,13 +84,15 @@ do
 
 	# Filter by VID/PID if given as input argument
 	if [ -n "$vid_pid" ]; then
-		arg_vid=`echo $vid_pid | awk -F':' '{print $1}'`
+		# Convert input vid to lower case
+		arg_vid=`echo $vid_pid | awk -F':' '{print $1}' | sed 's/^0x//' | tr '[A-Z]' '[a-z]'`
 		if [ -n "$arg_vid" ]; then
 			if [ $arg_vid != $VID ]; then 
 				continue
 			fi
 		fi
-		arg_pid=`echo $vid_pid | awk -F':' '{print $2}' | sed 's/^ *//; s/ *$//'`
+		# Convert input pid to lower case
+		arg_pid=`echo $vid_pid | awk -F':' '{print $2}' | sed 's/^ *//; s/ *$//; s/^0x//' | tr '[A-Z]' '[a-z]'`
 		if [ -n "$arg_pid" ]; then
 			# Remove manufacturer from PID
 			 #pid_stripped=`echo $PID | awk -F ' ' '{print $1}' | sed 's/ *$//'`
