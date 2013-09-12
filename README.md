@@ -18,3 +18,16 @@ Bus 04 Device 3: ID 05ac:8242 (Apple Inc.) IR Receiver
 Bus 06 Device 2: ID 0a5c:4500 (Broadcom Corp.) BRCM2046 Hub 
 Bus 06 Device 3: ID 05ac:8213 (Apple Inc.) Bluetooth USB Host Controller  Serial: 002608CCAC6F
 ```
+
+## Usage ##
+
+```
+ lsusb [ options ] 
+
+ Options:
+  -v  
+	 Print the original output of `system_profiler SPUSBDataType`
+
+  -d [vendor]:[product]
+              Show only devices with the specified vendor and product ID.  Both ID's are given in hexadecimal.
+```
