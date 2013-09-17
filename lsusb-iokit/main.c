@@ -5,20 +5,22 @@
 //  Created by JLH on 9/11/13.
 //  Copyright (c) 2013 JLH. All rights reserved.
 //
-
-#include <stdio.h>
-#include <IOKit/IOKitLib.h>
-#include <IOKit/usb/IOUSBLib.h>
-#include <CoreFoundation/CoreFoundation.h>
-#include <IOKit/IOCFPlugIn.h>
-#include <IOKit/usb/USBSpec.h>
-#include <CoreFoundation/CoreFoundation.h>
-
-void process_usb_device(io_service_t device);
-static bool getVidAndPid(io_service_t device, int *vid, int *pid);
-
 // Based on http://stackoverflow.com/questions/7567872/how-to-create-a-program-to-list-all-the-usb-devices-in-a-mac
 // and http://lists.apple.com/archives/usb/2007/Nov/msg00038.html
+
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreFoundation/CFString.h>
+#include <IOKit/IOKitLib.h>
+#include <IOKit/usb/IOUSBLib.h>
+#include <IOKit/usb/USB.h>
+#include <IOKit/IOCFPlugIn.h>
+
+void process_usb_device(io_service_t * device);
+static bool getVidAndPid(io_service_t * device, int *vid, int *pid);
+char * getVendorName(io_service_t * device);
+char * getSerialNumber(io_service_t * device);
+int getDeviceAddress(io_service_t * device);
+
 int main(int argc, const char *argv[])
 {
     printf("Starting\n");
@@ -42,11 +44,11 @@ int main(int argc, const char *argv[])
     /* iterate */
     while ((device = IOIteratorNext(iter))) {
         /* do something with device, eg. check properties */
-        process_usb_device(device);
+        process_usb_device(&device);
         /* And free the reference taken before continuing to the next item */
         IOObjectRelease(device);
     }
-
+    
     
     /* Done, release the iterator */
     IOObjectRelease(iter);
@@ -57,24 +59,34 @@ int main(int argc, const char *argv[])
 typedef struct USBDevice_t {
     char deviceName[200];
     int vid, pid;
+    char * manufacturer;
+    char * serial;
+    int address;
 } USBDevice;
 
-void process_usb_device(io_service_t device) {
+void process_usb_device(io_service_t * device) {
     USBDevice d;
-    IORegistryEntryGetName(device, d.deviceName);
+    IORegistryEntryGetName(*device, d.deviceName);
     getVidAndPid(device, &(d.vid), &(d.pid));
-    printf("%s %04x:%04x\n", d.deviceName, d.vid, d.pid);
+    d.manufacturer = getVendorName(device);
+    d.serial = getSerialNumber(device);
+    d.address = getDeviceAddress(device);
+    printf("Device %d: ID %04x:%04x (%s) %s", d.address, d.vid, d.pid, d.manufacturer, d.deviceName);
+    if(d.serial != NULL) {
+        printf(" Serial: %s", d.serial);
+    }
+    printf("\n");
 }
 
-static bool getVidAndPid(io_service_t device, int *vid, int *pid) {
+static bool getVidAndPid(io_service_t * device, int *vid, int *pid) {
 	bool success = false;
-	CFNumberRef	cfVendorId = (CFNumberRef)IORegistryEntryCreateCFProperty(device, CFSTR("idVendor"), kCFAllocatorDefault, 0);
+	CFNumberRef	cfVendorId = (CFNumberRef)IORegistryEntryCreateCFProperty(*device, CFSTR("idVendor"), kCFAllocatorDefault, 0);
 	if (cfVendorId && (CFGetTypeID(cfVendorId) == CFNumberGetTypeID()))	{
 		Boolean result;
 		result = CFNumberGetValue(cfVendorId, kCFNumberSInt32Type, vid);
 		CFRelease(cfVendorId);
 		if (result) {
-			CFNumberRef	cfProductId = (CFNumberRef)IORegistryEntryCreateCFProperty(device,                                      CFSTR("idProduct"), kCFAllocatorDefault, 0);
+			CFNumberRef	cfProductId = (CFNumberRef)IORegistryEntryCreateCFProperty(*device,                                      CFSTR("idProduct"), kCFAllocatorDefault, 0);
 			if (cfProductId && (CFGetTypeID(cfProductId) == CFNumberGetTypeID())) {
 				Boolean result;
 				result = CFNumberGetValue(cfProductId,
@@ -87,4 +99,27 @@ static bool getVidAndPid(io_service_t device, int *vid, int *pid) {
 		}
 	}
 	return (success);
+}
+char * getVendorName(io_service_t * device) {
+    if(!device) return NULL;
+    CFStringRef vendorName = IORegistryEntryCreateCFProperty(*device, CFSTR("USB Vendor Name"), kCFAllocatorDefault, 0);
+    return (char *) CFStringGetCStringPtr(vendorName, kCFStringEncodingMacRoman);
+}
+
+char * getSerialNumber(io_service_t * device) {
+    if(!device) return NULL;
+    CFStringRef serialNumber = IORegistryEntryCreateCFProperty(*device, CFSTR("USB Serial Number"), kCFAllocatorDefault, 0);
+    if(serialNumber == NULL)
+        return NULL;
+    return (char *) CFStringGetCStringPtr(serialNumber, kCFStringEncodingMacRoman);
+}
+
+int getDeviceAddress(io_service_t * device) {
+    int address = 0;
+    CFNumberRef	cfDeviceAddress = (CFNumberRef)IORegistryEntryCreateCFProperty(*device, CFSTR("USB Address"), kCFAllocatorDefault, 0);
+	if (cfDeviceAddress && (CFGetTypeID(cfDeviceAddress) == CFNumberGetTypeID()))	{
+		CFNumberGetValue(cfDeviceAddress, kCFNumberSInt32Type, &address);
+		CFRelease(cfDeviceAddress);
+    }
+    return address;
 }

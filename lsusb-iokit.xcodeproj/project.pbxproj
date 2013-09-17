@@ -7,83 +7,92 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D8CA4D2417E14F400083DFB9 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D8CA4D2317E14F400083DFB9 /* main.c */; };
-		D8CA4D2617E14F400083DFB9 /* lsusb_iokit.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8CA4D2517E14F400083DFB9 /* lsusb_iokit.1 */; };
-		D8CA4D2D17E14F4C0083DFB9 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8CA4D2C17E14F4C0083DFB9 /* IOKit.framework */; };
-		D8CA4D2F17E1E74D0083DFB9 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8CA4D2E17E1E74D0083DFB9 /* CoreFoundation.framework */; };
+		D8D5ABF817E265530029F7E4 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8D5ABF717E265530029F7E4 /* CoreFoundation.framework */; };
+		D8D5ABFB17E265530029F7E4 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D8D5ABFA17E265530029F7E4 /* main.c */; };
+		D8D5ABFD17E265530029F7E4 /* lsusb_iokit.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D8D5ABFC17E265530029F7E4 /* lsusb_iokit.1 */; };
+		D8D5AC0417E267D30029F7E4 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8D5AC0317E267D30029F7E4 /* IOKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		D8CA4D1E17E14F400083DFB9 /* CopyFiles */ = {
+		D8D5ABF217E265530029F7E4 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				D8CA4D2617E14F400083DFB9 /* lsusb_iokit.1 in CopyFiles */,
+				D8D5ABFD17E265530029F7E4 /* lsusb_iokit.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		D8CA4D2017E14F400083DFB9 /* lsusb-iokit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "lsusb-iokit"; sourceTree = BUILT_PRODUCTS_DIR; };
-		D8CA4D2317E14F400083DFB9 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		D8CA4D2517E14F400083DFB9 /* lsusb_iokit.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = lsusb_iokit.1; sourceTree = "<group>"; };
-		D8CA4D2C17E14F4C0083DFB9 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		D8CA4D2E17E1E74D0083DFB9 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		D8D5ABF417E265530029F7E4 /* lsusb-iokit */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "lsusb-iokit"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8D5ABF717E265530029F7E4 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		D8D5ABFA17E265530029F7E4 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		D8D5ABFC17E265530029F7E4 /* lsusb_iokit.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = lsusb_iokit.1; sourceTree = "<group>"; };
+		D8D5AC0317E267D30029F7E4 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		D8CA4D1D17E14F400083DFB9 /* Frameworks */ = {
+		D8D5ABF117E265530029F7E4 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D8CA4D2F17E1E74D0083DFB9 /* CoreFoundation.framework in Frameworks */,
-				D8CA4D2D17E14F4C0083DFB9 /* IOKit.framework in Frameworks */,
+				D8D5AC0417E267D30029F7E4 /* IOKit.framework in Frameworks */,
+				D8D5ABF817E265530029F7E4 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		D8CA4D1717E14F400083DFB9 = {
+		D8D5ABEB17E265530029F7E4 = {
 			isa = PBXGroup;
 			children = (
-				D8CA4D2E17E1E74D0083DFB9 /* CoreFoundation.framework */,
-				D8CA4D2C17E14F4C0083DFB9 /* IOKit.framework */,
-				D8CA4D2217E14F400083DFB9 /* lsusb-iokit */,
-				D8CA4D2117E14F400083DFB9 /* Products */,
+				D8D5AC0317E267D30029F7E4 /* IOKit.framework */,
+				D8D5ABF917E265530029F7E4 /* lsusb-iokit */,
+				D8D5ABF617E265530029F7E4 /* Frameworks */,
+				D8D5ABF517E265530029F7E4 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		D8CA4D2117E14F400083DFB9 /* Products */ = {
+		D8D5ABF517E265530029F7E4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D8CA4D2017E14F400083DFB9 /* lsusb-iokit */,
+				D8D5ABF417E265530029F7E4 /* lsusb-iokit */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		D8CA4D2217E14F400083DFB9 /* lsusb-iokit */ = {
+		D8D5ABF617E265530029F7E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				D8CA4D2317E14F400083DFB9 /* main.c */,
-				D8CA4D2517E14F400083DFB9 /* lsusb_iokit.1 */,
+				D8D5ABF717E265530029F7E4 /* CoreFoundation.framework */,
 			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D8D5ABF917E265530029F7E4 /* lsusb-iokit */ = {
+			isa = PBXGroup;
+			children = (
+				D8D5ABFA17E265530029F7E4 /* main.c */,
+				D8D5ABFC17E265530029F7E4 /* lsusb_iokit.1 */,
+			);
+			name = "lsusb-iokit";
 			path = "lsusb-iokit";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		D8CA4D1F17E14F400083DFB9 /* lsusb-iokit */ = {
+		D8D5ABF317E265530029F7E4 /* lsusb-iokit */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D8CA4D2917E14F400083DFB9 /* Build configuration list for PBXNativeTarget "lsusb-iokit" */;
+			buildConfigurationList = D8D5AC0017E265530029F7E4 /* Build configuration list for PBXNativeTarget "lsusb-iokit" */;
 			buildPhases = (
-				D8CA4D1C17E14F400083DFB9 /* Sources */,
-				D8CA4D1D17E14F400083DFB9 /* Frameworks */,
-				D8CA4D1E17E14F400083DFB9 /* CopyFiles */,
+				D8D5ABF017E265530029F7E4 /* Sources */,
+				D8D5ABF117E265530029F7E4 /* Frameworks */,
+				D8D5ABF217E265530029F7E4 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -91,48 +100,48 @@
 			);
 			name = "lsusb-iokit";
 			productName = "lsusb-iokit";
-			productReference = D8CA4D2017E14F400083DFB9 /* lsusb-iokit */;
+			productReference = D8D5ABF417E265530029F7E4 /* lsusb-iokit */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		D8CA4D1817E14F400083DFB9 /* Project object */ = {
+		D8D5ABEC17E265530029F7E4 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = JLH;
 			};
-			buildConfigurationList = D8CA4D1B17E14F400083DFB9 /* Build configuration list for PBXProject "lsusb-iokit" */;
+			buildConfigurationList = D8D5ABEF17E265530029F7E4 /* Build configuration list for PBXProject "lsusb-iokit" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 			);
-			mainGroup = D8CA4D1717E14F400083DFB9;
-			productRefGroup = D8CA4D2117E14F400083DFB9 /* Products */;
+			mainGroup = D8D5ABEB17E265530029F7E4;
+			productRefGroup = D8D5ABF517E265530029F7E4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D8CA4D1F17E14F400083DFB9 /* lsusb-iokit */,
+				D8D5ABF317E265530029F7E4 /* lsusb-iokit */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		D8CA4D1C17E14F400083DFB9 /* Sources */ = {
+		D8D5ABF017E265530029F7E4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D8CA4D2417E14F400083DFB9 /* main.c in Sources */,
+				D8D5ABFB17E265530029F7E4 /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		D8CA4D2717E14F400083DFB9 /* Debug */ = {
+		D8D5ABFE17E265530029F7E4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -165,7 +174,7 @@
 			};
 			name = Debug;
 		};
-		D8CA4D2817E14F400083DFB9 /* Release */ = {
+		D8D5ABFF17E265530029F7E4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -191,41 +200,42 @@
 			};
 			name = Release;
 		};
-		D8CA4D2A17E14F400083DFB9 /* Debug */ = {
+		D8D5AC0117E265530029F7E4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "lsusb-iokit";
 			};
 			name = Debug;
 		};
-		D8CA4D2B17E14F400083DFB9 /* Release */ = {
+		D8D5AC0217E265530029F7E4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "lsusb-iokit";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		D8CA4D1B17E14F400083DFB9 /* Build configuration list for PBXProject "lsusb-iokit" */ = {
+		D8D5ABEF17E265530029F7E4 /* Build configuration list for PBXProject "lsusb-iokit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D8CA4D2717E14F400083DFB9 /* Debug */,
-				D8CA4D2817E14F400083DFB9 /* Release */,
+				D8D5ABFE17E265530029F7E4 /* Debug */,
+				D8D5ABFF17E265530029F7E4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D8CA4D2917E14F400083DFB9 /* Build configuration list for PBXNativeTarget "lsusb-iokit" */ = {
+		D8D5AC0017E265530029F7E4 /* Build configuration list for PBXNativeTarget "lsusb-iokit" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D8CA4D2A17E14F400083DFB9 /* Debug */,
-				D8CA4D2B17E14F400083DFB9 /* Release */,
+				D8D5AC0117E265530029F7E4 /* Debug */,
+				D8D5AC0217E265530029F7E4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = D8CA4D1817E14F400083DFB9 /* Project object */;
+	rootObject = D8D5ABEC17E265530029F7E4 /* Project object */;
 }
