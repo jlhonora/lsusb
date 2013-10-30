@@ -29,5 +29,5 @@ Bus 06 Device 3: ID 05ac:8213 (Apple Inc.) Bluetooth USB Host Controller  Serial
 	 Print the original output of `system_profiler SPUSBDataType`
 
   -d [vendor]:[product]
-              Show only devices with the specified vendor and product ID.  Both ID's are given in hexadecimal.
+              Show only devices with the specified vendor and product ID.  Both IDs are given in hexadecimal.
 ```
