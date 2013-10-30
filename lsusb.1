@@ -1,0 +1,31 @@
+.TH "lsusb" "1" "October 2013" "lsusb" "lsusb for Mac OS X"
+.
+.SH "NAME"
+\fBlsusb\fR \- List attached USB devices
+.
+.SH "SYNOPSIS"
+\fBbrew\fR \-\-version
+.
+.br
+\fBbrew\fR command [\-\-verbose|\-v] [options] [formula] \.\.\.
+.
+.SH "DESCRIPTION"
+Homebrew is the easiest and most flexible way to install the UNIX tools Apple didn\'t include with OS X\.
+
+This is an utility to easily list USB devices in Mac OS X, just like the \fB\fClsusb\fR command in Linux. It leverages the data from the \fB\fCsystem_profiler SPUSBDataType\fR built\-in command available in Mac. You can type \fB\fClsusb -v\fR to get the unmodified output of \fB\fCsystem_profiler SPUSBDataType\fR\&.
+.
+.SH Usage
+
+ lsusb [ options ] 
+ Options:
+  -v  
+     Print the original output of `system_profiler SPUSBDataType`
+  -d [vendor]:[product]
+              Show only devices with the specified vendor and product ID.  Both ID's are given in hexadecimal.
+.SH "SEE ALSO"
+https://github.com/jlhonora/lsusb
+.
+.SH "AUTHORS"
+Jose L. Honorato <jlhonora@ing.puc.cl>
+.fi
+.RE
