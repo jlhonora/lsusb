@@ -19,7 +19,7 @@ usage () { echo "Usage: $(basename "$0") [-hv] [-d DEVICE]"; }
 help ()  {
   cat <<EOM
 $(usage)
-Display information about attached USB devices.
+List attached USB devices.
 
   -h  display this help and exit
   -v  display the raw output of \`system_profiler SPUSBDataType\`
