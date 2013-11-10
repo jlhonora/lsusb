@@ -6,7 +6,7 @@
 # lsusb [ options ]
 #
 # Options:
-#  -v  
+#  -v
 # 	 Print the original output of `system_profiler SPUSBDataType`
 #
 #  -d [vendor][:product]
@@ -14,25 +14,37 @@
 #
 # Disclaimer: some part of the usage info has been taken from the manual of lsusb(8), I take no credit for it.
 
-# Save the data from the system_profiler command
-system_profiler SPUSBDataType > sp_info.log
+lsusb () { system_profiler SPUSBDataType; }
+usage () { echo "Usage: $(basename "$0") [-hv] [-d DEVICE]"; }
+help ()  {
+  cat <<EOM
+$(usage)
+List attached USB devices.
+
+  -h  display this help and exit
+  -v  display the raw output of \`system_profiler SPUSBDataType\`
+  -d  Show only devices which match the argument.
+
+DEVICE is [vendorId][:productId], with ids given in hexadecimal.
+EOM
+}
 
 # Parse options (v and d for now)
-while getopts "vd:" opt; do
-    case "$opt" in
-    # Verbose
-    v)  
-        # Just output
-        cat sp_info.log
-        rm sp_info.log
-        exit 0
-        ;;
-    # Filter by VID/PID
-    d)
-        vid_pid=$OPTARG
-        ;;
-    esac
+while getopts ":hvd:" opt; do
+  case "$opt" in
+    h) help && exit 0 ;;     # help
+    v) lsusb && exit 0 ;;    # verbose
+    d) vid_pid=$OPTARG ;;    # filter
+    *) echo >&2 "Unrecognized option: $OPTARG" && usage && exit 1
+  esac
 done
+
+# Save the data from the system_profiler command in $usblog
+usblog="$(mktemp -t lsusb).log"
+lsusb > "$usblog"
+
+# Remove log on exit
+trap "rm -f $usblog" EXIT
 
 # Get all sets of lines that contain the "Product ID" string.
 # Also include other relevant lines. Here's an entry sample:
@@ -51,7 +63,7 @@ done
 # Each entry will be separated by two '--' lines. We replace them
 # with the '#' symbol in case other parameters that contain a dash
 # will not be interfered
-devices=`egrep -B 2 -A 6 "Product ID" sp_info.log | sed 's/^--/#/'`
+devices=`egrep -B 2 -A 6 "Product ID" "$usblog" | sed 's/^--/#/'`
 
 # Change the IFS to #, backup the current one
 OIFS=$IFS
@@ -59,7 +71,7 @@ IFS="#"
 counter=0
 
 # Iterate over each entry
-for device in $devices 
+for device in $devices
 do
 	# Get the name of the device, it is the first line that ends with a ':'
 	# Trim the string at the end
@@ -87,7 +99,7 @@ do
 		# Convert input vid to lower case
 		arg_vid=`echo $vid_pid | awk -F':' '{print $1}' | sed 's/^0x//' | tr '[A-Z]' '[a-z]'`
 		if [ -n "$arg_vid" ]; then
-			if [ $arg_vid != $VID ]; then 
+			if [ $arg_vid != $VID ]; then
 				continue
 			fi
 		fi
@@ -104,7 +116,7 @@ do
 
 	# Get the bus number. For that, grep the last entry that contains "Bus Number" and then trim at the end.
 	# Also remove the 0x from hex numbers
-	bus_num=`egrep -B 100 "$PID" sp_info.log | egrep "Bus Number" | tail -1 | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+	bus_num=`egrep -B 100 "$PID" "$usblog" | egrep "Bus Number" | tail -1 | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
 	# Get the device number within the bus, print it as the second entry using '/' as field separator
 	device_num=`echo $device | egrep "Location ID" | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;' | awk -F'/' '{print $2}'`
 
@@ -121,5 +133,3 @@ done
 
 # Restore the IFS
 IFS=$OIFS
-# Clean the log
-rm sp_info.log

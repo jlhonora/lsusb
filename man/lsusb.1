@@ -1,31 +1,25 @@
-.TH "lsusb" "1" "October 2013" "lsusb" "lsusb for Mac OS X"
+.TH "lsusb" "1" "November 2013" "Homebrew" "lsusb for Mac OS X"
 .
 .SH "NAME"
-\fBlsusb\fR \- List attached USB devices
+\fBlsusb\fR - list attached USB devices
 .
 .SH "SYNOPSIS"
-\fBbrew\fR \-\-version
-.
-.br
-\fBbrew\fR command [\-\-verbose|\-v] [options] [formula] \.\.\.
-.
+\fBlsusb\fR [\-hv] [\-d DEVICE]
+
 .SH "DESCRIPTION"
-Homebrew is the easiest and most flexible way to install the UNIX tools Apple didn\'t include with OS X\.
+Lists USB devices in Mac OS X, like the \fBlsusb\fR command in Linux.
 
-This is an utility to easily list USB devices in Mac OS X, just like the \fB\fClsusb\fR command in Linux. It leverages the data from the \fB\fCsystem_profiler SPUSBDataType\fR built\-in command available in Mac. You can type \fB\fClsusb -v\fR to get the unmodified output of \fB\fCsystem_profiler SPUSBDataType\fR\&.
-.
-.SH Usage
+This utility is built on the output of \fB\fCsystem_profiler\fR.
 
- lsusb [ options ] 
- Options:
-  -v  
-     Print the original output of `system_profiler SPUSBDataType`
-  -d [vendor]:[product]
-              Show only devices with the specified vendor and product ID.  Both ID's are given in hexadecimal.
+  -h         display this help and exit
+  -v         show the raw output of `system_profiler SPUSBDataType`
+  -d DEVICE  list only devices which match DEVICE
+
+DEVICE is [vendorId][:productId], ids in hexadecimal.
+
 .SH "SEE ALSO"
-https://github.com/jlhonora/lsusb
-.
+/usr/sbin/system_profiler, https://github.com/jlhonora/lsusb
+
 .SH "AUTHORS"
 Jose L. Honorato <jlhonora@ing.puc.cl>
 .fi
-.RE
