@@ -129,7 +129,16 @@ do
 
 	# Print the formatted entry
 	echo "Bus $bus_num Device$device_num: ID $VID:$PID $manufacturer $name $serial_str"
+
+	(( counter++ ))
 done
 
 # Restore the IFS
 IFS=$OIFS
+
+# A specific device was requested, but it was not found
+if [ -n "$vid_pid" -a $counter -eq 0 ]; then
+	exit 1
+fi
+
+exit 0
