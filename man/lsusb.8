@@ -1,0 +1,68 @@
+.TH lsusb 8 "21 Feb 2014" "usbutils-007" "USB Utilities"
+.IX lsusb
+.SH NAME
+lsusb \- list USB devices
+.SH SYNOPSIS
+.B lsusb
+[
+.I options
+]
+.SH DESCRIPTION
+.B lsusb
+is a utility for displaying information about USB buses in the system and
+the devices connected to them.
+
+.SH OPTIONS
+.TP
+.B \-v
+Tells
+.I lsusb
+to be verbose and display detailed information about the devices shown,
+specifically the raw output of 
+.I system_profiler SPUSBDataType
+.TP
+\fB\-s\fP [[\fIbus\fP]\fB:\fP][\fIdevnum\fP]
+Show only devices in specified
+.I bus
+and/or
+.I devnum. 
+Both ID's are given in decimal and may be omitted.
+.TP
+\fB\-d\fP [\fIvendor\fP]\fB:\fP[\fIproduct\fP]
+Show only devices with the specified 
+.I vendor 
+and/or 
+.I product 
+ID.
+Both ID's are given in hexadecimal.
+.TP
+.B \-t
+Tells
+.I lsusb
+to dump the physical USB device hierarchy as a tree. This overrides the
+\fBv\fP option.
+.TP
+.B \-p
+Display manufacturer names in parentheses.
+.TP
+.B \-V
+Print  version information on standard output,
+then exit successfully.
+.TP
+.B \-h
+Print help to standard error,
+then exit successfully.
+
+.SH RETURN VALUE
+If the specified device is not found, a non-zero exit code is returned.
+
+.SH SEE ALSO
+.BR system_profiler (8).
+
+.SH "AUTHORS"
+Jose L. Honorato <jlhonora@ing.puc.cl>
+
+.SH "CONTRIBUTORS"
+See https://github.com/jlhonora/lsusb/graphs/contributors for an up-to-date list.
+
+.fi
