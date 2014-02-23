@@ -1,50 +1,184 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # lsusb (list USB devices) utility for Mac OS X
 # Author: JLH, Sep 2013
-# Usage:
 #
-# lsusb [ options ]
-#
-# Options:
-#  -v
-# 	 Print the original output of `system_profiler SPUSBDataType`
-#
-#  -d [vendor][:product]
-#              Show only devices with the specified vendor and product ID.  Both ID's are given in hexadecimal.
-#
-# Disclaimer: some part of the usage info has been taken from the manual of lsusb(8), I take no credit for it.
+# Disclaimer: usage info and functionality from lsusb under Linux
 
-lsusb () { system_profiler SPUSBDataType; }
-usage () { echo "Usage: $(basename "$0") [-hv] [-d DEVICE]"; }
+verbose () { system_profiler SPUSBDataType; }
+version () { echo "lsusb (usbutils) 007"; }
 help ()  {
-  cat <<EOM
+  cat >&2 <<EOM
 $(usage)
-List attached USB devices.
-
-  -h  display this help and exit
-  -v  display the raw output of \`system_profiler SPUSBDataType\`
-  -d  Show only devices which match the argument.
-
-DEVICE is [vendorId][:productId], with ids given in hexadecimal.
+List USB devices
+  -v  Increase verbosity (show output of "system_profiler SPUSBDataType")
+  -s  [[bus]:][devnum]
+       Show only devices with specified device and/or
+       bus numbers (in decimal)
+  -d  [vendor]:[product]
+       Show only devices with the specified vendor and
+       product ID numbers (in hexadecimal)
+  -p  Display manufacturer names in parentheses
+  -V  Show version of program
+  -h  Show usage and help
 EOM
 }
+usage () { echo "Usage: $(basename "$0") [options]..."; }
 
-# Parse options (v and d for now)
-while getopts ":hvd:" opt; do
+parse ()  {
+	# Get the name of the device, it is the first line that ends with a ':'
+	# Trim the string at the end
+	name=`echo $device | head -2 | egrep ":$"  | sed -e 's/^ *//g' -e 's/ *:$//g'`
+
+	#get the speed
+	speed=`echo $device | egrep "Speed: " | awk -F':' '{print $2}' | sed 's/^ *Up to //g; s/ *$//; s/b\/sec$//; s/ //g'`
+	# Get the PID, trim at the end
+	PID=`echo $device | egrep "Product ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+	# Get the VID string, trim at the end
+	VID_all=`echo $device | egrep "Vendor ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+	# Get the VID
+	VID=`echo $VID_all | awk -F ' ' '{print $1}' | sed 's/^ *//; s/ *$//'`
+	# Get the manufacturer string
+	manufacturer=`echo $VID_all | cut -d ' ' -f 2- | sed 's/^ *//; s/ *$//'`
+
+	#get the Location Id
+	location=`echo $device | egrep "Location ID" | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;'`
+
+	# Get the bus number. It's the first two hex digits of the Location ID
+	# we'll convert to decimal later
+	bus_num=`echo $location |  sed -e 's/^..\(..\).*/\1/;'` 
+
+	# Get the device number. It's after the '/' in the Location ID, already decimal
+	device_num=`echo $location | awk -F'/' '{print $2}'`
+	device_num=`printf "%0*d" 3 $device_num`
+
+	#strip off the excess from LocationID for sorting tree
+	locationID=`echo $location | awk -F'/' '{print $1}'`
+
+	# Special case for "root hub" - follow the (faked) Linux standard
+	if [ -z "$PID" ]; then
+		if [ -z ${name} ]; then
+			return 1
+		fi
+		bus_num=`echo $device | egrep "Bus Number" | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+		locationID="0x${bus_num}000000"
+		device_num="001"
+		VID="1d6b"
+		manufacturer="(Linux Foundation)"
+		PID=`echo $device | egrep "Controller Driver" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g; s/.*\(....\)$/\1/'`
+
+	  	case "$PID" in
+			OHCI) PID="0001"; name="1.1 root hub"; speed="12M" ;;
+			EHCI) PID="0002"; name="2.0 root hub"; speed="480M" ;;
+			XHCI) PID="0003"; name="3.0 root hub"; speed="5000M" ;;
+		esac
+	fi
+
+	#convert bus number from hexadecimal to decimal
+	bus_num=`echo "$((16#$bus_num))"`
+        bus_num=`printf "%0*d" 3 $bus_num`
+
+	#strip the parentheses from manufacturer name unless so specified
+	if [ -z $parens ]; then	
+	 	manufacturer=`echo $manufacturer | sed 's/(//; s/)//'`
+	fi
+
+	# Include serial number only if available
+	serial_str=""
+	serial_number=`echo $device | egrep "Serial Number" | sed 's/Serial Number: //; s/^ *//g; s/ *$//g'`
+	if [ -n "$serial_number" ]; then
+		serial_str=" Serial: $serial_number"
+	fi
+
+	
+	# Filter by VID/PID if given as input argument
+	if [ -n "$vid_pid" ]; then
+	# Convert input vid to lower case
+	   if [ -n "$(echo $vid_pid | egrep ':')" ]; then 
+		arg_vid=`echo $vid_pid | awk -F':' '{print $1}' | sed 's/^0x//' | tr '[A-Z]' '[a-z]'`
+		if [ -n "$arg_vid" ]; then
+			if [ $((16#$arg_vid)) -ne $((16#$VID)) ]; then
+				return 1
+			fi
+		fi
+		arg_pid=`echo $vid_pid | awk -F':' '{print $2}' | sed 's/^0x//' | tr '[A-Z]' '[a-z]'`
+		if [ -n "$arg_pid" ]; then
+			if [ $((16#$arg_pid)) -ne $((16#$PID)) ]; then
+				return 1
+			fi
+		fi
+	   else
+		#missing a colon is a syntax error after -d
+    		help 
+		exit 1
+	   fi
+	fi
+
+	# Filter by BUS/DEV if given as input argument
+	if [ -n "$bus_dev" ]; then
+	    if [ -n "$(echo $bus_dev | egrep ':')" ]; then 
+		# Convert input bus to lower case
+		arg_bus=`echo $bus_dev | awk -F':' '{print $1}' | sed 's/^ *//; s/ *$//'`
+		if [ -n "$arg_bus" ]; then
+			if [ $arg_bus -ne $bus_num ]; then
+				return 1
+			fi
+		fi
+		# strip leading and trailing spaces from argument
+		arg_dev=`echo $bus_dev | awk -F':' '{print $2}' | sed 's/^ *//; s/ *$//'`
+		if [ -n "$arg_dev" ]; then
+			if [ $arg_dev -ne $device_num ]; then
+				return 1
+			fi
+		fi
+	    fi
+	fi
+	#special case: no colon after -s means device-only
+	if [ -z "$(echo $bus_dev | egrep ':')" ]; then 
+	# strip leading and trailing spaces from argument
+		arg_dev=`echo $bus_dev | sed 's/^ *//; s/ *$//'`
+		if [ -n "$arg_dev" ]; then
+			if [ $arg_dev -ne $device_num ]; then
+				return 1
+			fi
+		fi
+	fi
+
+	#if we got this far, we found a match, so set exit code to 0
+	exitcode=0
+}
+
+setup () {
+#save the data
+if [ -z $rawlog ]; then
+	rawlog=$(verbose)
+fi
+
+
+# Change the IFS to #, backup the current one
+OIFS=$IFS
+IFS="#"
+exitcode=1
+}
+
+cleanup () {
+IFS=$OIFS
+exit $exitcode
+}
+
+# Parse options 
+while getopts ":hvpd:s:V" opt; do
   case "$opt" in
-    h) help && exit 0 ;;     # help
-    v) lsusb && exit 0 ;;    # verbose
-    d) vid_pid=$OPTARG ;;    # filter
-    *) echo >&2 "Unrecognized option: $OPTARG" && usage && exit 1
+    h) help ; exit 0 ;;     # help
+    v) verbose ; exit 0 ;;  # verbose
+    V) version ; exit 0 ;;  # version
+    d) vid_pid=$OPTARG ;;   # filter
+    s) bus_dev=$OPTARG ;;   # filter
+    p) parens="yes" ;;	    # formatter
+    *) echo >&2 "lsusb: invalid option -- '$OPTARG'" ; help ; exit 1
   esac
 done
 
-# Save the data from the system_profiler command in $usblog
-usblog="$(mktemp -t lsusb).log"
-lsusb > "$usblog"
-
-# Remove log on exit
-trap "rm -f $usblog" EXIT
+setup
 
 # Get all sets of lines that contain the "Product ID" string.
 # Also include other relevant lines. Here's an entry sample:
@@ -63,82 +197,27 @@ trap "rm -f $usblog" EXIT
 # Each entry will be separated by two '--' lines. We replace them
 # with the '#' symbol in case other parameters that contain a dash
 # will not be interfered
-devices=`egrep -B 2 -A 6 "Product ID" "$usblog" | sed 's/^--/#/'`
 
-# Change the IFS to #, backup the current one
-OIFS=$IFS
-IFS="#"
-counter=0
-
+devices=`echo $rawlog | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
 # Iterate over each entry
 for device in $devices
 do
-	# Get the name of the device, it is the first line that ends with a ':'
-	# Trim the string at the end
-	name=`echo $device | head -2 | egrep ":$"  | sed -e 's/^ *//g' -e 's/ *:$//g'`
-
-	# Get the PID, trim at the end
-	PID=`echo $device | egrep "Product ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
-	# If there's no PID then we skip the entry
-	if [ -z "$PID" ]; then
-		continue
+	parse
+	if [ $? -eq 0 ]; then
+		# Print the formatted entry
+		echo "Bus $bus_num Device $device_num: ID $VID:$PID $manufacturer $name $serial_str"
 	fi
+done
 
-	# Get the VID, trim at the end
-	VID_all=`echo $device | egrep "Vendor ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
-	# If there's no VID then we skip the entry
-	if [ -z "$VID_all" ]; then
-		continue
+buses=`echo $rawlog | egrep -A 7 "Bus:" | sed 's/^--/#/'`
+for device in $buses
+do
+	parse
+	if [ $? -eq 0 ]; then
+		# Print the formatted entry
+		echo "Bus $bus_num Device $device_num: ID $VID:$PID $manufacturer $name $serial_str"
 	fi
-	VID=`echo $VID_all | awk -F ' ' '{print $1}' | sed 's/^ *//; s/ *$//'`
-	# Get the manufacturer string
-	manufacturer=`echo $VID_all | cut -d ' ' -f 2- | sed 's/^ *//; s/ *$//'`
-
-	# Filter by VID/PID if given as input argument
-	if [ -n "$vid_pid" ]; then
-		# Convert input vid to lower case
-		arg_vid=`echo $vid_pid | awk -F':' '{print $1}' | sed 's/^0x//' | tr '[A-Z]' '[a-z]'`
-		if [ -n "$arg_vid" ]; then
-			if [ $arg_vid != $VID ]; then
-				continue
-			fi
-		fi
-		# Convert input pid to lower case
-		arg_pid=`echo $vid_pid | awk -F':' '{print $2}' | sed 's/^ *//; s/ *$//; s/^0x//' | tr '[A-Z]' '[a-z]'`
-		if [ -n "$arg_pid" ]; then
-			# Remove manufacturer from PID
-			 #pid_stripped=`echo $PID | awk -F ' ' '{print $1}' | sed 's/ *$//'`
-			if [ $arg_pid != $PID ]; then
-				continue
-			fi
-		fi
-	fi
-
-	# Get the bus number. For that, grep the last entry that contains "Bus Number" and then trim at the end.
-	# Also remove the 0x from hex numbers
-	bus_num=`egrep -B 100 "$PID" "$usblog" | egrep "Bus Number" | tail -1 | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
-	# Get the device number within the bus, print it as the second entry using '/' as field separator
-	device_num=`echo $device | egrep "Location ID" | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;' | awk -F'/' '{print $2}'`
-
-	# Include serial number only if available
-	serial_str=""
-	serial_number=`echo $device | egrep "Serial Number" | sed 's/Serial Number: //; s/^ *//g; s/ *$//g'`
-	if [ -n "$serial_number" ]; then
-		serial_str=" Serial: $serial_number"
-	fi
-
-	# Print the formatted entry
-	echo "Bus $bus_num Device$device_num: ID $VID:$PID $manufacturer $name $serial_str"
-
-	(( counter++ ))
 done
 
 # Restore the IFS
-IFS=$OIFS
-
-# A specific device was requested, but it was not found
-if [ -n "$vid_pid" -a $counter -eq 0 ]; then
-	exit 1
-fi
-
-exit 0
+cleanup
