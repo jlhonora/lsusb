@@ -18,6 +18,7 @@ List USB devices
        Show only devices with the specified vendor and
        product ID numbers (in hexadecimal)
   -p  Display manufacturer names in parentheses
+  -t  Dump the physical USB device hierarchy as a tree
   -V  Show version of program
   -h  Show usage and help
 EOM
@@ -90,6 +91,12 @@ parse ()  {
 	fi
 
 	
+	# don't filter if we're building the tree
+	if [ "$treeflag" == "yes" ]; then
+		exitcode=0
+		return 
+	fi
+
 	# Filter by VID/PID if given as input argument
 	if [ -n "$vid_pid" ]; then
 	# Convert input vid to lower case
@@ -158,6 +165,7 @@ fi
 OIFS=$IFS
 IFS="#"
 exitcode=1
+treeflag="no"
 }
 
 cleanup () {
@@ -165,11 +173,75 @@ IFS=$OIFS
 exit $exitcode
 }
 
+buildtreeline () {
+# build a formatted line to be sorted for the tree
+# the LocationID has the tree structure (0xbbdddddd):
+#   0x  -- always
+#   bb  -- bus number in hexadecimal
+#   dddddd -- up to six levels for the tree, each digit represents its
+#             position on that level
+# 
+# so we start each line with the LocationID for sorting purposes,
+# then append the rest of the line as we want it
+# Later, we'll do the sort, then strip off the LocationID for display purposes
+
+	spaces=`echo $locationID | sed 's/^0x...//; s/0//g; s/./ /g; s/.*/&&&&/'`
+	if [ ${#spaces} -eq 0 ]; then
+		spaces=" /:  "
+	else
+		#weird syntax because we have one space too many
+		spaces="${spaces}|__ "
+	fi
+	treeline="${locationID}${spaces}Bus ${bus_num}.Dev ${device_num}: ${name}, ${speed}"
+}
+
+tree () { 
+setup
+treeflag="yes"
+
+devices=`echo $rawlog | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
+for device in $devices
+do
+	#skip null items
+	if [ "${#device}" -ne 1 ]; then
+		parse
+		buildtreeline
+		treedata="$treedata${treeline}\n"
+	fi
+done
+
+buses=`echo $rawlog | egrep -A 7 "Bus:" | sed 's/^--/#/'`
+for device in $buses
+do
+	parse
+	buildtreeline
+	treedata="$treedata${treeline}\n"
+done
+
+#strip off final \n (weird syntax but it works)
+treedata=`echo ${treedata/%%?/}` 
+#sort by Location ID
+treedata=`echo ${treedata} | sort`
+
+#Now strip off leading Location ID and print
+for line in $treedata
+do
+	echo $line | sed 's/^...........//'
+done
+
+# Restore the IFS
+cleanup
+
+#not really needed, as cleanup routine does the exit
+exit 0 
+}
+
 # Parse options 
-while getopts ":hvpd:s:V" opt; do
+while getopts ":hvpd:s:Vt" opt; do
   case "$opt" in
     h) help ; exit 0 ;;     # help
     v) verbose ; exit 0 ;;  # verbose
+    t) tree ; exit 0 ;;     # tree
     V) version ; exit 0 ;;  # version
     d) vid_pid=$OPTARG ;;   # filter
     s) bus_dev=$OPTARG ;;   # filter
