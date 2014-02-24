@@ -43,7 +43,7 @@ parse ()  {
 	# Get the manufacturer string
 	manufacturer=`echo "$VID_all" | cut -d ' ' -f 2- | sed 's/^ *//; s/ *$//'`
 
-	#get the Location Id
+	# Get the Location Id
 	location=`echo "$device" | egrep "Location ID" | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;'`
 
 	# Get the bus number. It's the first two hex digits of the Location ID.
@@ -101,11 +101,10 @@ parse ()  {
 		serial_str=" Serial: ""$serial_number"
 	fi
 
-	
 	# Don't filter if we're building the tree.
 	if [ "$treeflag" == "yes" ]; then
 		exitcode=0
-		return 
+		return
 	fi
 
 	# Filter by VID/PID if given as input argument.
@@ -166,25 +165,25 @@ parse ()  {
 }
 
 setup () {
-# Save the data (if we haven't already).
-if [ -z "$rawlog" ]; then
-	rawlog=$(verbose)
-fi
+	# Save the data (if we haven't already).
+	if [ -z "$rawlog" ]; then
+		rawlog=$(verbose)
+	fi
 
-# Change the IFS to #, backup the current one.
-OIFS=$IFS
-IFS="#"
+	# Change the IFS to #, backup the current one.
+	OIFS=$IFS
+	IFS="#"
 
-# Default exit code is failure, but if we match anything this will change to success.
-exitcode=1
+	# Default exit code is failure, but if we match anything this will change to success.
+	exitcode=1
 
-# Flag to know if -t option was set. We ignore filters if so.
-treeflag="no"
+	# Flag to know if -t option was set. We ignore filters if so.
+	treeflag="no"
 }
 
 cleanup () {
-IFS=$OIFS
-exit "$exitcode"
+	IFS=$OIFS
+	exit $exitcode
 }
 
 buildtreeline () {
@@ -207,49 +206,49 @@ buildtreeline () {
 	treeline="${locationID}${spaces}Bus ""${bus_num}"".Dev ""${device_num}"": ""${name}"", ""${speed}"
 }
 
-tree () { 
-setup
-treeflag="yes"
+tree () {
+	setup
+	treeflag="yes"
 
-devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
-for device in $devices
-do
-	#skip null device lines
-	if [ "${#device}" -ne 1 ]; then
+	devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
+	for device in $devices
+	do
+		# Skip null device lines
+		if [ "${#device}" -ne 1 ]; then
+			parse
+			buildtreeline
+			treedata="$treedata""${treeline}"$'\n'
+		fi
+	done
+
+	buses=`echo "$rawlog" | egrep -A 7 "Bus:" | sed 's/^--/#/'`
+	for device in $buses
+	do
 		parse
 		buildtreeline
-		treedata="$treedata""${treeline}"$'\n'
-	fi
-done
+		treedata="${treedata}""${treeline}"$'\n'
+	done
 
-buses=`echo "$rawlog" | egrep -A 7 "Bus:" | sed 's/^--/#/'`
-for device in $buses
-do
-	parse
-	buildtreeline
-	treedata="${treedata}""${treeline}"$'\n'
-done
-
-# Strip off final \n. 
-treedata=`echo "${treedata}" | awk '{ prev_line = line; line = $0; } NR > 1 { print prev_line; } END { ORS = ""; print line; }'`
+	# Strip off final \n. 
+	treedata=`echo "${treedata}" | awk '{ prev_line = line; line = $0; } NR > 1 { print prev_line; } END { ORS = ""; print line; }'`
  
-# Sort by Location ID.
-treedata=`echo "${treedata}" | sort`
+	# Sort by Location ID.
+	treedata=`echo "${treedata}" | sort`
 
-# Now strip off leading Location ID and print to stdout.
-for line in $treedata
-do
-	echo "$line" | sed 's/^...........//'
-done
+	# Now strip off leading Location ID and print to stdout.
+	for line in $treedata
+	do
+		echo "$line" | sed 's/^...........//'
+	done
 
-# Restore the IFS
-cleanup
+	# Restore the IFS
+	cleanup
 
-# Not really needed, as cleanup routine does the exit.
-exit 0 
+	# Not really needed, as cleanup routine does the exit.
+	exit 0 
 }
 
-# Parse options 
+# Parse options
 while getopts ":hvpd:s:Vt" opt; do
   case "$opt" in
     h) help ; exit 0 ;;     # help
