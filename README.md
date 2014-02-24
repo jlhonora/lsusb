@@ -14,31 +14,33 @@ brew install lsusb
 Here's an output example:
 
 ```
-Bus 24 Device 3: ID 1a40:0101 (TERMINUS TECHNOLOGY INC.) USB 2.0 Hub [MTT] 
-Bus 24 Device 5: ID 0403:6001 (Future Technology Devices International Limited) FT232R USB UART  Serial: A501B6VA
-Bus 24 Device 4: ID 0403:6001 (Future Technology Devices International Limited) FT232R USB UART  Serial: A601EFG9
-Bus 24 Device 2: ID 05ac:8507 (Apple Inc.) Built-in iSight  Serial: 8J97P2KF16V13A00
-Bus 26 Device 2: ID 05ac:8403 (Apple Inc.) Internal Memory Card Reader  Serial: 9833
-Bus 04 Device 4: ID 05ac:0236 (Apple Inc.) Apple Internal Keyboard / Trackpad 
-Bus 04 Device 3: ID 05ac:8242 (Apple Inc.) IR Receiver 
-Bus 06 Device 2: ID 0a5c:4500 (Broadcom Corp.) BRCM2046 Hub 
-Bus 06 Device 3: ID 05ac:8213 (Apple Inc.) Bluetooth USB Host Controller  Serial: 002608CCAC6F
+Bus 036 Device 002: ID 05ac:8507 Apple Inc. Built-in iSight  Serial: 8J97P2KF16V13A00
+Bus 038 Device 002: ID 05ac:8403 Apple Inc. Internal Memory Card Reader  Serial: 000000009833
+Bus 004 Device 003: ID 05ac:8242 Apple Inc. IR Receiver 
+Bus 004 Device 002: ID 05ac:0236 Apple Inc. Apple Internal Keyboard / Trackpad 
+Bus 006 Device 002: ID 0a5c:4500 Broadcom Corp. BRCM2046 Hub 
+Bus 006 Device 003: ID 05ac:8213 Apple Inc. Bluetooth USB Host Controller  Serial: 002608CCAC6F
+Bus 036 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub 
+Bus 038 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub 
+Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub 
+Bus 006 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
 ```
 
 ## Usage ##
 
 ```
- lsusb [ options ] 
-
- Options:
-  -v  
-	 Print the original output of `system_profiler SPUSBDataType`.
-
-  -d [vendor]:[product]
-              Show only devices with the specified vendor and product ID.  Both IDs are given in hexadecimal.
-  
-  -h
-     Show help/usage.
+List USB devices
+  -v  Increase verbosity (show output of "system_profiler SPUSBDataType")
+  -s  [[bus]:][devnum]
+       Show only devices with specified device and/or
+       bus numbers (in decimal)
+  -d  [vendor]:[product]
+       Show only devices with the specified vendor and
+       product ID numbers (in hexadecimal)
+  -p  Display manufacturer names in parentheses
+  -t  Dump the physical USB device hierarchy as a tree
+  -V  Show version of program
+  -h  Show usage and help
 ```
 
-For a more accurate usage description type `man lsusb` or `man man/lsusb.1` if inside the script's directory.
+For a more accurate usage description type `man lsusb` or `man man/lsusb.8` if inside the script's directory.
