@@ -48,7 +48,7 @@ parse ()  {
 
 	# Get the bus number. It's the first two hex digits of the Location ID.
 	# We'll convert to decimal later
-	bus_num=`echo "$location" |  sed -e 's/^..\(..\).*/\1/;'` 
+	bus_num=`echo "$location" |  sed -e 's/^..\(..\).*/\1/;'`
 
 	# Get the device number. It's after the '/' in the Location ID, already decimal.
 	device_num=`echo "$location" | awk -F'/' '{print $2}'`
@@ -110,7 +110,7 @@ parse ()  {
 	# Filter by VID/PID if given as input argument.
 	if [ -n "$vid_pid" ]; then
 	# Convert input vid to lower case.
-	   if [ -n "$(echo "$vid_pid" | egrep ':')" ]; then 
+	   if [ -n "$(echo "$vid_pid" | egrep ':')" ]; then
 		arg_vid=`echo "$vid_pid" | awk -F':' '{print $1}' | sed 's/^0x//' | tr '[A-Z]' '[a-z]'`
 		if [ -n "$arg_vid" ]; then
 			if [ $((16#$arg_vid)) -ne $((16#$VID)) ]; then
@@ -125,14 +125,14 @@ parse ()  {
 		fi
 	   else
 		# Missing a colon is a syntax error in -d option
-    		help 
+    		help
 		exit 1
 	   fi
 	fi
 
 	# Filter by BUS/DEV if given as input argument.
 	if [ -n "$bus_dev" ]; then
-	    if [ -n "$(echo "$bus_dev" | egrep ':')" ]; then 
+	    if [ -n "$(echo "$bus_dev" | egrep ':')" ]; then
 		# Convert input bus to lower case
 		arg_bus=`echo "$bus_dev" | awk -F':' '{print $1}' | sed 's/^ *//; s/ *$//'`
 		if [ -n "$arg_bus" ]; then
@@ -150,7 +150,7 @@ parse ()  {
 	    fi
 	fi
 	# Special case: no colon after -s means device-only.
-	if [ -z "$(echo "$bus_dev" | egrep ':')" ]; then 
+	if [ -z "$(echo "$bus_dev" | egrep ':')" ]; then
 	# Strip leading and trailing spaces from argument.
 		arg_dev=`echo "$bus_dev" | sed 's/^ *//; s/ *$//'`
 		if [ -n "$arg_dev" ]; then
@@ -193,7 +193,7 @@ buildtreeline () {
 #   bb  -- bus number in hexadecimal
 #   dddddd -- up to six levels for the tree, each digit represents its
 #             position on that level
-# 
+#
 # So we start each line with the LocationID for sorting purposes, then append the rest of the line as we want it
 # Later, we'll do the sort, then strip off the LocationID for display purposes
 
@@ -229,9 +229,9 @@ tree () {
 		treedata="${treedata}""${treeline}"$'\n'
 	done
 
-	# Strip off final \n. 
+	# Strip off final \n.
 	treedata=`echo "${treedata}" | awk '{ prev_line = line; line = $0; } NR > 1 { print prev_line; } END { ORS = ""; print line; }'`
- 
+
 	# Sort by Location ID.
 	treedata=`echo "${treedata}" | sort`
 
@@ -245,7 +245,7 @@ tree () {
 	cleanup
 
 	# Not really needed, as cleanup routine does the exit.
-	exit 0 
+	exit 0
 }
 
 # Parse options
