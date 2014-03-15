@@ -73,15 +73,15 @@ parse ()  {
 		device_num="001"
 
 		# Vendor ID and Manufacturer are always as follows.
-		VID="1d6b"
-		manufacturer="(Linux Foundation)"
+		VID="05ac"
+		manufacturer="(Apple Inc.)"
 
 		# The PID depends on the speed of the hub, which we deduce from the controller driver.
 		PID=`echo "$device" | egrep "Controller Driver" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g; s/.*\(....\)$/\1/'`
 	  	case "$PID" in
-			OHCI) PID="0001"; name="1.1 root hub"; speed="12M" ;;
-			EHCI) PID="0002"; name="2.0 root hub"; speed="480M" ;;
-			XHCI) PID="0003"; name="3.0 root hub"; speed="5000M" ;;
+			OHCI) PID="8005"; name="OHCI Root Hub Simulation"; speed="12M" ;;
+			EHCI) PID="8006"; name="EHCI Root Hub Simulation"; speed="480M" ;;
+			XHCI) PID="8007"; name="XHCI Root Hub USB 2.0 Simulation"; speed="5000M" ;;
 		esac
 	fi
 
