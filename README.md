@@ -14,16 +14,20 @@ brew install lsusb
 Here's an output example:
 
 ```
+Bus 036 Device 003: ID 04e8:6860 Samsung Electronics Co., Ltd. SAMSUNG_Android  Serial: 323062d3f6738057
 Bus 036 Device 002: ID 05ac:8507 Apple Inc. Built-in iSight  Serial: 8J97P2KF16V13A00
+Bus 038 Device 003: ID 1a40:0101 TERMINUS TECHNOLOGY INC. USB 2.0 Hub [MTT] 
+Bus 038 Device 004: ID 0403:6001 Future Technology Devices International Limited FT232R USB UART  Serial: A601EFG9
+Bus 038 Device 005: ID 12d1:1038 Huawei Technologies Co., Ltd. Android Adapter  Serial: 509F2735096D
 Bus 038 Device 002: ID 05ac:8403 Apple Inc. Internal Memory Card Reader  Serial: 000000009833
 Bus 004 Device 003: ID 05ac:8242 Apple Inc. IR Receiver 
 Bus 004 Device 002: ID 05ac:0236 Apple Inc. Apple Internal Keyboard / Trackpad 
 Bus 006 Device 002: ID 0a5c:4500 Broadcom Corp. BRCM2046 Hub 
 Bus 006 Device 003: ID 05ac:8213 Apple Inc. Bluetooth USB Host Controller  Serial: 002608CCAC6F
-Bus 036 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub 
-Bus 038 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub 
-Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub 
-Bus 006 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 036 Device 001: ID 05ac:8006 Apple Inc. EHCI Root Hub Simulation 
+Bus 038 Device 001: ID 05ac:8006 Apple Inc. EHCI Root Hub Simulation 
+Bus 004 Device 001: ID 05ac:8005 Apple Inc. OHCI Root Hub Simulation 
+Bus 006 Device 001: ID 05ac:8005 Apple Inc. OHCI Root Hub Simulation
 ```
 
 ## Usage ##
