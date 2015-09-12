@@ -203,7 +203,7 @@ buildtreeline () {
 	else
 		spaces="${spaces}|__ "
 	fi
-	treeline="${locationID}${spaces}Bus ""${bus_num}"".Dev ""${device_num}"": ""${name}"", ""${speed}"
+	treeline="${locationID}""${spaces}""Bus ""${bus_num}"".Dev ""${device_num}"": ""$manufacturer"" ""${name}"", ""${speed}"
 }
 
 tree () {
@@ -252,12 +252,12 @@ tree () {
 while getopts ":hvpd:s:Vt" opt; do
   case "$opt" in
     h) help ; exit 0 ;;     # help
-    v) verbose ; exit 0 ;;  # verbose
-    t) tree ; exit 0 ;;     # tree
-    V) version ; exit 0 ;;  # version
     d) vid_pid=$OPTARG ;;   # filter
     s) bus_dev=$OPTARG ;;   # filter
-    p) parens="yes" ;;	    # formatter
+    p) parens="yes" ;;      # formatter
+    t) tree ; exit 0 ;;     # tree
+    v) verbose ; exit 0 ;;  # verbose
+    V) version ; exit 0 ;;  # version
     *) echo >&2 "lsusb: invalid option -- '$OPTARG'" ; help ; exit 1
   esac
 done
