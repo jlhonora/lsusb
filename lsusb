@@ -10,78 +10,77 @@ help ()  {
   cat >&2 <<EOM
 $(usage)
 List USB devices
-  -v  Increase verbosity (show output of "system_profiler SPUSBDataType")
-  -s  [[bus]:][devnum]
-       Show only devices with specified device and/or
-       bus numbers (in decimal)
-  -d  [vendor]:[product]
-       Show only devices with the specified vendor and
-       product ID numbers (in hexadecimal)
-  -p  Display manufacturer names in parentheses
-  -t  Dump the physical USB device hierarchy as a tree
-  -V  Show version of program
   -h  Show usage and help
+  -d  [vendor]:[product]
+       Show only devices with the specified vendor
+       and product ID numbers (in hexadecimal)
+  -s  [[bus]:][devnum]
+       Show only devices with specified device
+       and/or bus numbers (in decimal)
+  -m  Add manufacturers' names to the tree hierarchy
+  -p  Display manufacturers' names in parentheses
+  -t  Dump the physical USB device hierarchy as a tree
+  -v  Be verbose (run "system_profiler SPUSBDataType")
+  -V  Show version of the program
 EOM
 }
 usage () { echo "Usage: $(basename "$0") [options]..."; }
 
 parse ()  {
-	# Get the name of the device, it is the first line that ends with a ':'
-	# Trim the string at the end
+	# Get the name of the device (it's the 1st line ending in ':') and trim it at the end.
 	name=`echo "$device" | head -2 | egrep ":$"  | sed -e 's/^ *//g' -e 's/ *:$//g'`
 
 	# Get the speed
 	speed=`echo "$device" | egrep "Speed: " | awk -F':' '{print $2}' | sed 's/^ *[^0-9]*//g; s/ *$//; s/b\/sec$//; s/ //g'`
 
-	# Get the PID, trim at the end
+	# Get the product ID and trim it at the end.
 	PID=`echo "$device" | egrep "Product ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
 
-	# Get the VID string, trim at the end
+	# Get the vendor ID string and trim at the end.
 	VID_all=`echo "$device" | egrep "Vendor ID" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
 	# Get the VID
 	VID=`echo "$VID_all" | awk -F ' ' '{print $1}' | sed 's/^ *//; s/ *$//'`
-	# Get the manufacturer string
+	# Get the manufacturer string.
 	manufacturer=`echo "$VID_all" | cut -d ' ' -f 2- | sed 's/^ *//; s/ *$//'`
 
-	# Get the Location Id
+	# Get the location ID.
 	location=`echo "$device" | egrep "Location ID" | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;'`
 
-	# Get the bus number. It's the first two hex digits of the Location ID.
-	# We'll convert to decimal later
+	# Get the bus number (the 1st 2 hex digits of the location ID, we'll convert to decimal later).
 	bus_num=`echo "$location" |  sed -e 's/^..\(..\).*/\1/;'`
 
-	# Get the device number. It's after the '/' in the Location ID, already decimal.
+	# Get the device number (the string after '/' in the location ID, already decimal).
 	device_num=`echo "$location" | awk -F'/' '{print $2}'`
 	device_num=`printf "%0*d" 3 "$device_num"`
 
-	# Strip off the excess from LocationID for sorting tree.
+	# Strip off the excess from the location ID (for sorting the tree).
 	locationID=`echo "$location" | awk -F'/' '{print $1}'`
 
-	# Special case for "root hub" - follow the (faked) Linux standard.
+	# Special case for "root hub": follow the (faked) Linux standard.
 	if [ -z "$PID" ]; then
 		if [ -z "$name" ]; then
 			return 1
 		fi
 
-		# Get the bus number, in hexadecimal. We'll convert to decimal later.
+		# Get the bus number (in hexadecimal, we'll convert to decimal later).
 		bus_num=`echo "$device" | egrep "Bus Number" | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
 
-		# Create a fake Location ID for sorting purposes, following the model.
+		# Create a fake location ID for sorting purposes (following the model).
 		locationID="0x${bus_num}000000"
 
 		# Device Number is always 1.
 		device_num="001"
 
-		# Vendor ID and Manufacturer are always as follows.
-		VID="05ac"
-		manufacturer="(Apple Inc.)"
+		# vendor ID and manufacturer are always as follows.
+		VID="1d6b"
+		manufacturer="(Linux Foundation)"
 
-		# The PID depends on the speed of the hub, which we deduce from the controller driver.
+		# The product ID depends on the speed of the hub, which we deduce from the controller's driver.
 		PID=`echo "$device" | egrep "Controller Driver" | awk -F':' '{print $2}' | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g; s/.*\(....\)$/\1/'`
 	  	case "$PID" in
-			OHCI) PID="8005"; name="OHCI Root Hub Simulation"; speed="12M" ;;
-			EHCI) PID="8006"; name="EHCI Root Hub Simulation"; speed="480M" ;;
-			XHCI) PID="8007"; name="XHCI Root Hub USB 2.0 Simulation"; speed="5000M" ;;
+			OHCI) PID="0001"; name="1.1 root hub"; speed="12M" ;;
+			EHCI) PID="0002"; name="2.0 root hub"; speed="480M" ;;
+			XHCI) PID="0003"; name="3.0 root hub"; speed="5000M" ;;
 		esac
 	fi
 
@@ -89,12 +88,12 @@ parse ()  {
 	bus_num=`echo "$((16#$bus_num))"`
         bus_num=`printf "%0*d" 3 "$bus_num"`
 
-	# Strip the parentheses from manufacturer name unless so specified.
+	# Strip the parentheses from manufacturer's name unless otherwise specified.
 	if [ -z "$parens" ]; then	
 	 	manufacturer=`echo "$manufacturer" | sed 's/(//; s/)//'`
 	fi
 
-	# Include serial number only if available.
+	# Include the serial number only if available.
 	serial_str=""
 	serial_number=`echo "$device" | egrep "Serial Number" | sed 's/Serial Number: //; s/^ *//g; s/ *$//g'`
 	if [ -n "$serial_number" ]; then
@@ -107,7 +106,7 @@ parse ()  {
 		return
 	fi
 
-	# Filter by VID/PID if given as input argument.
+	# Filter by vendor's or product's ID if given in input.
 	if [ -n "$vid_pid" ]; then
 	# Convert input vid to lower case.
 	   if [ -n "$(echo "$vid_pid" | egrep ':')" ]; then
@@ -124,16 +123,16 @@ parse ()  {
 			fi
 		fi
 	   else
-		# Missing a colon is a syntax error in -d option
+		# A missing colon is a syntax error in the -d option.
     		help
 		exit 1
 	   fi
 	fi
 
-	# Filter by BUS/DEV if given as input argument.
+	# Filter by bus's or device's number if given in input.
 	if [ -n "$bus_dev" ]; then
 	    if [ -n "$(echo "$bus_dev" | egrep ':')" ]; then
-		# Convert input bus to lower case
+		# Strip leading and trailing spaces from argument.
 		arg_bus=`echo "$bus_dev" | awk -F':' '{print $1}' | sed 's/^ *//; s/ *$//'`
 		if [ -n "$arg_bus" ]; then
 			if [ "$arg_bus" -ne "$bus_num" ]; then
@@ -147,20 +146,14 @@ parse ()  {
 				return 1
 			fi
 		fi
-	    fi
-	fi
-	# Special case: no colon after -s means device-only.
-	if [ -z "$(echo "$bus_dev" | egrep ':')" ]; then
-	# Strip leading and trailing spaces from argument.
-		arg_dev=`echo "$bus_dev" | sed 's/^ *//; s/ *$//'`
-		if [ -n "$arg_dev" ]; then
-			if [ "$arg_dev" -ne "$device_num" ]; then
-				return 1
-			fi
-		fi
+	   else
+		# A missing colon is a syntax error in -s option.
+    		help
+		exit 1
+	   fi
 	fi
 
-	# If we got this far, we found a match, so set exit code to 0 before returning
+	# If we got so far then we found a match, so set exit code to 0 before returning.
 	exitcode=0
 }
 
@@ -170,14 +163,14 @@ setup () {
 		rawlog=$(verbose)
 	fi
 
-	# Change the IFS to #, backup the current one.
+	# Change the input field separator to '#' and backup the current one.
 	OIFS=$IFS
 	IFS="#"
 
 	# Default exit code is failure, but if we match anything this will change to success.
 	exitcode=1
 
-	# Flag to know if -t option was set. We ignore filters if so.
+	# Flag for the -t option; we ignore filters if set.
 	treeflag="no"
 }
 
@@ -188,14 +181,15 @@ cleanup () {
 
 buildtreeline () {
 # Build a formatted line to be sorted for the tree.
-# The LocationID has the tree structure (0xbbdddddd):
+# The location ID has a tree structure (0xbbdddddd):
 #   0x  -- always
 #   bb  -- bus number in hexadecimal
-#   dddddd -- up to six levels for the tree, each digit represents its
-#             position on that level
+#   dddddd -- up to six levels for the tree,
+#             each digit represents
+#             its position on that level
 #
-# So we start each line with the LocationID for sorting purposes, then append the rest of the line as we want it
-# Later, we'll do the sort, then strip off the LocationID for display purposes
+# We start each line with the location ID, then we append the rest of the line.
+# Later we'll sort them and strip the location ID.
 
 	spaces=`echo "$locationID" | sed 's/^0x...//; s/0//g; s/./ /g; s/.*/&&&&/'`
 	if [ ${#spaces} -eq 0 ]; then
@@ -203,7 +197,12 @@ buildtreeline () {
 	else
 		spaces="${spaces}|__ "
 	fi
-	treeline="${locationID}${spaces}Bus ""${bus_num}"".Dev ""${device_num}"": ""${name}"", ""${speed}"
+	if [ "$mfrflag" == "yes" ]; then
+		mfr="$manufacturer "
+	else
+		mfr=""
+	fi
+	treeline="${locationID}${spaces}Bus ""${bus_num}"".Dev ""${device_num}"": ""${mfr}""${name}"", ""${speed}"
 }
 
 tree () {
@@ -229,43 +228,44 @@ tree () {
 		treedata="${treedata}""${treeline}"$'\n'
 	done
 
-	# Strip off final \n.
+	# Strip off final newline character.
 	treedata=`echo "${treedata}" | awk '{ prev_line = line; line = $0; } NR > 1 { print prev_line; } END { ORS = ""; print line; }'`
 
-	# Sort by Location ID.
+	# Sort by location ID.
 	treedata=`echo "${treedata}" | sort`
 
-	# Now strip off leading Location ID and print to stdout.
+	# Strip off leading location ID and print to stdout.
 	for line in $treedata
 	do
 		echo "$line" | sed 's/^...........//'
 	done
 
-	# Restore the IFS
+	# Restore the input field separator.
 	cleanup
 
-	# Not really needed, as cleanup routine does the exit.
+	# Not really needed as the cleanup routine does it.
 	exit 0
 }
 
-# Parse options
-while getopts ":hvpd:s:Vt" opt; do
+# Parse options.
+while getopts ":hd:s:mptvV" opt; do
   case "$opt" in
-    h) help ; exit 0 ;;     # help
-    v) verbose ; exit 0 ;;  # verbose
-    t) tree ; exit 0 ;;     # tree
-    V) version ; exit 0 ;;  # version
-    d) vid_pid=$OPTARG ;;   # filter
-    s) bus_dev=$OPTARG ;;   # filter
-    p) parens="yes" ;;	    # formatter
+    h) help ; exit 0 ;;    # help
+    d) vid_pid=$OPTARG ;;  # filter
+    s) bus_dev=$OPTARG ;;  # filter
+    m) mfrflag="yes" ;;    # manifacturer
+    p) parens="yes" ;;	   # formatter
+    t) tree ; exit 0 ;;    # tree
+    v) verbose ; exit 0 ;; # verbose
+    V) version ; exit 0 ;; # version
     *) echo >&2 "lsusb: invalid option -- '$OPTARG'" ; help ; exit 1
   esac
 done
 
 setup
 
-# Get all sets of lines that contain the "Product ID" string.
-# Also include other relevant lines. Here's an entry sample:
+# Get all sets of lines that contain the product ID.
+# Also Include other relevant lines. See the sample:
 #
 # BRCM2046 Hub:
 #
@@ -278,12 +278,12 @@ setup
 #  Current Available (mA): 500
 #  Current Required (mA): 0
 #
-# Each entry will be separated by two '--' lines. We replace them
-# with the '#' symbol in case other parameters that contain a dash
-# will not be interfered
+# Each entry will be separated by two '--' lines.
+# We replace them with '#', to avoid interference
+# with other parameters containing a '-'.
 
 devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
-# Iterate over each entry
+# Iterate over each entry.
 for device in $devices
 do
 	parse
@@ -303,5 +303,5 @@ do
 	fi
 done
 
-# Restore the IFS and exit
+# Restore the input file separator and exit.
 cleanup
