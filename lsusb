@@ -4,7 +4,7 @@
 #
 # Disclaimer: usage info and functionality from lsusb under Linux
 
-verbose () { system_profiler SPUSBDataType; }
+verbose () { system_profiler SPUSBDataType 2>/dev/null; }
 version () { echo "lsusb for Mac OS X 007"; }
 help ()  {
   cat >&2 <<EOM
