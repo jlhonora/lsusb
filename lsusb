@@ -25,6 +25,30 @@ EOM
 }
 usage () { echo "Usage: $(basename "$0") [options]..."; }
 
+split_devices() {
+    awk '                           \
+        /Product ID:/ {             \
+            print TWO_BEFORE;       \
+            print ONE_BEFORE;       \
+            PRINTING=1;             \
+        }                           \
+                                    \
+        /^$/ {                      \
+            if (PRINTING == 1) {    \
+                PRINTING=0;         \
+                print "#";          \
+            }                       \
+        }                           \
+                                    \
+        {                           \
+            if (PRINTING == 1) {    \
+                print               \
+            }                       \
+            TWO_BEFORE=ONE_BEFORE;  \
+            ONE_BEFORE=$0;          \
+        }' <<< "$rawlog"
+}
+
 parse ()  {
 	# Get the name of the device, it is the first line that ends with a ':'
 	# Trim the string at the end
@@ -210,7 +234,7 @@ tree () {
 	setup
 	treeflag="yes"
 
-	devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
+    devices=$(split_devices)
 	for device in $devices
 	do
 		# Skip null device lines
@@ -282,7 +306,7 @@ setup
 # with the '#' symbol in case other parameters that contain a dash
 # will not be interfered
 
-devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
+devices=$(split_devices)
 # Iterate over each entry
 for device in $devices
 do
