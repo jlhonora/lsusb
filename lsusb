@@ -4,7 +4,7 @@
 #
 # Disclaimer: usage info and functionality from lsusb under Linux
 
-verbose () { system_profiler SPUSBDataType; }
+verbose () { system_profiler SPUSBDataType 2>/dev/null; }
 version () { echo "lsusb for Mac OS X 007"; }
 help ()  {
   cat >&2 <<EOM
@@ -109,9 +109,13 @@ parse ()  {
 		esac
 	fi
 
-	# Convert bus number from hexadecimal to decimal.
-	bus_num=`echo "$((16#$bus_num))"`
-        bus_num=`printf "%0*d" 3 "$bus_num"`
+	if [ ${#bus_num} -ne 0 ]; then
+		# Convert bus number from hexadecimal to decimal.
+		bus_num=`echo "$((16#$bus_num))"`
+		bus_num=`printf "%0*d" 3 "$bus_num"`
+	else
+		bus_num='000'
+	fi
 
 	# Strip the parentheses from manufacturer name unless so specified.
 	if [ -z "$parens" ]; then	
@@ -234,7 +238,7 @@ tree () {
 	setup
 	treeflag="yes"
 
-    devices=$(split_devices)
+	devices=$(split_devices)
 	for device in $devices
 	do
 		# Skip null device lines
