@@ -4,7 +4,7 @@
 #
 # Disclaimer: usage info and functionality from lsusb under Linux
 
-verbose () { system_profiler SPUSBDataType; }
+verbose () { system_profiler SPUSBDataType 2>/dev/null; }
 version () { echo "lsusb for Mac OS X 007"; }
 help ()  {
   cat >&2 <<EOM
@@ -24,6 +24,30 @@ List USB devices
 EOM
 }
 usage () { echo "Usage: $(basename "$0") [options]..."; }
+
+split_devices() {
+    awk '                           \
+        /Product ID:/ {             \
+            print TWO_BEFORE;       \
+            print ONE_BEFORE;       \
+            PRINTING=1;             \
+        }                           \
+                                    \
+        /^$/ {                      \
+            if (PRINTING == 1) {    \
+                PRINTING=0;         \
+                print "#";          \
+            }                       \
+        }                           \
+                                    \
+        {                           \
+            if (PRINTING == 1) {    \
+                print               \
+            }                       \
+            TWO_BEFORE=ONE_BEFORE;  \
+            ONE_BEFORE=$0;          \
+        }' <<< "$rawlog"
+}
 
 parse ()  {
 	# Get the name of the device, it is the first line that ends with a ':'
@@ -85,9 +109,13 @@ parse ()  {
 		esac
 	fi
 
-	# Convert bus number from hexadecimal to decimal.
-	bus_num=`echo "$((16#$bus_num))"`
-        bus_num=`printf "%0*d" 3 "$bus_num"`
+	if [ ${#bus_num} -ne 0 ]; then
+		# Convert bus number from hexadecimal to decimal.
+		bus_num=`echo "$((16#$bus_num))"`
+		bus_num=`printf "%0*d" 3 "$bus_num"`
+	else
+		bus_num='000'
+	fi
 
 	# Strip the parentheses from manufacturer name unless so specified.
 	if [ -z "$parens" ]; then	
@@ -210,7 +238,7 @@ tree () {
 	setup
 	treeflag="yes"
 
-	devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
+	devices=$(split_devices)
 	for device in $devices
 	do
 		# Skip null device lines
@@ -282,7 +310,7 @@ setup
 # with the '#' symbol in case other parameters that contain a dash
 # will not be interfered
 
-devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
+devices=$(split_devices)
 # Iterate over each entry
 for device in $devices
 do
