@@ -4,8 +4,8 @@
 #
 # Disclaimer: usage info and functionality from lsusb under Linux
 
-verbose () { system_profiler SPUSBDataType; }
-version () { echo "lsusb for Mac OS X 007"; }
+verbose () { system_profiler SPUSBDataType 2>/dev/null; }
+version () { echo "lsusb for Mac OS X 008"; }
 help ()  {
   cat >&2 <<EOM
 $(usage)
@@ -25,6 +25,7 @@ EOM
 }
 usage () { echo "Usage: $(basename "$0") [options]..."; }
 
+unknown_dev_num=127
 parse ()  {
 	# Get the name of the device, it is the first line that ends with a ':'
 	# Trim the string at the end
@@ -49,10 +50,16 @@ parse ()  {
 	# Get the bus number. It's the first two hex digits of the Location ID.
 	# We'll convert to decimal later
 	bus_num=`echo "$location" |  sed -e 's/^..\(..\).*/\1/;'`
+	if [[ -z $bus_num ]]; then
+		bus_num="00"
+	fi
 
 	# Get the device number. It's after the '/' in the Location ID, already decimal.
 	device_num=`echo "$location" | awk -F'/' '{print $2}'`
-	device_num=`printf "%0*d" 3 "$device_num"`
+	if [[ -z $device_num ]]; then
+		device_num=$((unknown_dev_num--))
+	fi
+	device_num=`printf "%03d" "$device_num"`
 
 	# Strip off the excess from LocationID for sorting tree.
 	locationID=`echo "$location" | awk -F'/' '{print $1}'`
@@ -65,6 +72,9 @@ parse ()  {
 
 		# Get the bus number, in hexadecimal. We'll convert to decimal later.
 		bus_num=`echo "$device" | egrep "Bus Number" | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+		if [[ -z $bus_num ]]; then
+			bus_num="00"
+		fi
 
 		# Create a fake Location ID for sorting purposes, following the model.
 		locationID="0x${bus_num}000000"
@@ -86,8 +96,7 @@ parse ()  {
 	fi
 
 	# Convert bus number from hexadecimal to decimal.
-	bus_num=`echo "$((16#$bus_num))"`
-        bus_num=`printf "%0*d" 3 "$bus_num"`
+	bus_num=$(printf "%03d" "0x0$bus_num")
 
 	# Strip the parentheses from manufacturer name unless so specified.
 	if [ -z "$parens" ]; then	
@@ -206,12 +215,20 @@ buildtreeline () {
 	treeline="${locationID}${spaces}Bus ""${bus_num}"".Dev ""${device_num}"": ""${name}"", ""${speed}"
 }
 
+get_devices() {
+	<<<"$rawlog" sed -e '/:$/i\
+#'
+}
+
+get_buses() {
+	<<<"$rawlog" awk -v first=1 '/Bus:$/ { flag = 1; if (first == 1) { first = 0 } else { print "#" }; print; next }; /:$/ && flag == 1 { flag = 0 }; flag'
+}
+
 tree () {
 	setup
 	treeflag="yes"
 
-	devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
-	for device in $devices
+	for device in $(get_devices)
 	do
 		# Skip null device lines
 		if [ "${#device}" -ne 1 ]; then
@@ -221,7 +238,6 @@ tree () {
 		fi
 	done
 
-	buses=`echo "$rawlog" | egrep -A 7 "Bus:" | sed 's/^--/#/'`
 	for device in $buses
 	do
 		parse
@@ -282,9 +298,8 @@ setup
 # with the '#' symbol in case other parameters that contain a dash
 # will not be interfered
 
-devices=`echo "$rawlog" | egrep -B 2 -A 6 "Product ID" | sed 's/^--/#/'`
 # Iterate over each entry
-for device in $devices
+for device in $(get_devices)
 do
 	parse
 	if [ $? -eq 0 ]; then
@@ -293,8 +308,8 @@ do
 	fi
 done
 
-buses=`echo "$rawlog" | egrep -A 7 "Bus:" | sed 's/^--/#/'`
-for device in $buses
+echo "Buses:"
+for device in $(get_buses)
 do
 	parse
 	if [ $? -eq 0 ]; then
