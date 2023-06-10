@@ -238,7 +238,7 @@ tree () {
 		fi
 	done
 
-	for device in $buses
+	for device in $(get_buses)
 	do
 		parse
 		buildtreeline
