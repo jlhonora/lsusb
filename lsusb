@@ -65,16 +65,25 @@ parse ()  {
 	fi
 
 	# Get the Location Id
-	location=`echo "$device" | egrep -A7 "$name" | egrep "Location ID" | tail -1 | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;'`
+	location=`echo "$device" | egrep "Location ID" | tail -1 | sed -e 's/Location ID://; s/^ *//g; s/ *$//g;'`
 
 	# Get the bus number. It's the first two hex digits of the Location ID.
 	# We'll convert to decimal later
 	bus_num=`echo "$location" |  sed -e 's/^..\(..\).*/\1/;'`
 
 	# Get the device number. It's after the '/' in the Location ID, already decimal.
-	# Tahoe breaks this format, and we don't have a device number.
+	# Tahoe no longer reports it there, but the bus address still exists in
+	# the IO Registry, so look it up by Location ID (000 if not found).
 	device_num=`echo "$location" | awk -F'/' '{print $2}'`
-	device_num=`printf "%0*d" 3 "$device_num"`
+	if [ -z "$device_num" ] && [ -n "$location" ]; then
+		if [ -z "$dev_addresses" ]; then
+			dev_addresses=`get_dev_addresses`
+		fi
+		loc_key=`echo "$location" | sed 's/^0x0*//'`
+		addr_hex=`echo "$dev_addresses" | awk -v loc="$loc_key" '$1 == loc { print $2; exit }'`
+		device_num=$((16#${addr_hex:-0}))
+	fi
+	device_num=`printf "%0*d" 3 "${device_num:-0}"`
 
 	# Strip off the excess from LocationID for sorting tree.
 	locationID=`echo "$location" | awk -F'/' '{print $1}'`
@@ -86,10 +95,15 @@ parse ()  {
 		fi
 
 		# Get the bus number, in hexadecimal. We'll convert to decimal later.
-		bus_num=`echo "$device" | egrep "Bus Number" | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+		# Tahoe has no Bus Number line; keep the bus number already taken
+		# from the Location ID instead.
+		bus_hex=`echo "$device" | egrep "Bus Number" | sed -e 's/Bus Number://' -e 's/0x//; s/^ *//g' -e 's/ *$//g'`
+		if [ -n "$bus_hex" ]; then
+			bus_num="$bus_hex"
 
-		# Create a fake Location ID for sorting purposes, following the model.
-		locationID="0x${bus_num}000000"
+			# Create a fake Location ID for sorting purposes, following the model.
+			locationID="0x${bus_num}000000"
+		fi
 
 		# Device Number is always 1.
 		device_num="001"
@@ -99,11 +113,11 @@ parse ()  {
 		manufacturer="(Apple Inc.)"
 
 		# The PID depends on the speed of the hub, which we deduce from the controller driver.
-		PID=`echo "$device" | egrep "(Controller)? Driver:" | awk -F':' '{print $2}' | tail -1 | sed -e 's/0x//; s/^ *//g' -e 's/ *$//g; s/.*\(....\)$/\1/'`
-	  	case "$PID" in
-			OHCI) PID="8005"; name="OHCI Root Hub Simulation"; speed="12M" ;;
-			EHCI) PID="8006"; name="EHCI Root Hub Simulation"; speed="480M" ;;
-			XHCI) PID="8007"; name="XHCI Root Hub USB 2.0 Simulation"; speed="5000M" ;;
+		driver=`echo "$device" | egrep "(Controller)? Driver:" | awk -F':' '{print $2}' | tail -1`
+	  	case "$driver" in
+			*OHCI*) PID="8005"; name="OHCI Root Hub Simulation"; speed="12M" ;;
+			*EHCI*) PID="8006"; name="EHCI Root Hub Simulation"; speed="480M" ;;
+			*XHCI*) PID="8007"; name="XHCI Root Hub USB 2.0 Simulation"; speed="5000M" ;;
 		esac
 	fi
 
@@ -210,12 +224,40 @@ cleanup () {
 }
 
 get_devices() {
-	<<<"$rawlog" sed -e '/:$/i\
-#'
+	# Split the log into sections at each "name:" line and emit only the
+	# sections that contain a Product ID line (i.e. actual devices),
+	# separated by '#' lines. Buses are handled by get_buses.
+	<<<"$rawlog" awk -v first=1 '
+		function emit() {
+			if (buf ~ /Product ID/) {
+				if (first == 1) { first = 0 } else { print "#" }
+				printf "%s", buf
+			}
+			buf = ""
+		}
+		/:$/ { emit() }
+		{ buf = buf $0 "\n" }
+		END { emit() }'
 }
 
 get_buses() {
 	<<<"$rawlog" awk -v first=1 '/Bus:$/ { flag = 1; if (first == 1) { first = 0 } else { print "#" }; print; next }; /:$/ && flag == 1 { flag = 0 }; flag'
+}
+
+get_dev_addresses() {
+	# Map each device's Location ID to its USB bus address from the IO
+	# Registry. Tahoe's system_profiler no longer reports device numbers
+	# (the pre-Tahoe "Location ID: 0x... / dev" suffix), but the addresses
+	# still exist in the IOUSB plane. Emit one "locationID address" pair
+	# per device, both in hex with the 0x prefix and leading zeros stripped.
+	ioreg -p IOUSB -l -x 2>/dev/null | awk '
+		/"locationID" = 0x/ { loc = $NF; sub(/^0x0*/, "", loc) }
+		/"USB Address" = 0x/ { addr = $NF; sub(/^0x0*/, "", addr) }
+		/^[ |]*}[ ]*$/ {
+			if (loc != "" && addr != "") { print loc " " addr }
+			loc = ""
+			addr = ""
+		}'
 }
 
 buildtreeline () {
@@ -229,9 +271,14 @@ buildtreeline () {
 # So we start each line with the LocationID for sorting purposes, then append the rest of the line as we want it
 # Later, we'll do the sort, then strip off the LocationID for display purposes
 
-	spaces=`echo "$locationID" | sed 's/^0x...//; s/0//g; s/./ /g; s/.*/&&&&/'`
+	# Strip any trailing space left over from the pre-Tahoe "0x... / dev" format.
+	locationID=`echo "$locationID" | sed 's/ *$//'`
+
+	# Indent four spaces per tree level: after the 0x prefix and two-digit
+	# bus number, each nonzero digit is one level deep.
+	spaces=`echo "$locationID" | sed 's/^0x..//; s/[^1-9a-fA-F]//g; s/./    /g'`
 	if [ ${#spaces} -eq 0 ]; then
-		spaces=" /:  "
+		spaces="/:  "
 	else
 		spaces="${spaces}|__ "
 	fi
@@ -242,7 +289,7 @@ tree () {
 	setup
 	treeflag="yes"
 
-	for device in "$(get_devices)"
+	for device in $(get_devices)
 	do
 		# Skip null device lines
 		if [ "${#device}" -ne 1 ]; then
@@ -252,7 +299,7 @@ tree () {
 		fi
 	done
 
-	for device in "$(get_buses)"
+	for device in $(get_buses)
 	do
 		parse
 		buildtreeline
@@ -265,10 +312,10 @@ tree () {
 	# Sort by Location ID.
 	treedata=`echo "${treedata}" | sort`
 
-	# Now strip off leading Location ID and print to stdout.
+	# Now strip off the leading 10-character Location ID and print to stdout.
 	for line in $treedata
 	do
-		echo "$line" | sed 's/^...........//'
+		echo "$line" | sed 's/^..........//'
 	done
 
 	# Restore the IFS
@@ -327,7 +374,7 @@ setup
 # will not be interfered
 
 # Iterate over each entry
-for device in "$(get_devices)"
+for device in $(get_devices)
 do
 	parse
 	if [ $? -eq 0 ]; then
@@ -336,7 +383,7 @@ do
 	fi
 done
 
-for device in "$(get_buses)"
+for device in $(get_buses)
 do
 	parse
 	if [ $? -eq 0 ]; then
